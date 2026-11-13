@@ -25,6 +25,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .primary-btn{width:100%;padding:14px;background:var(--blue);color:#101114;font-weight:750;border-radius:10px}
 .primary-btn:disabled{opacity:.6;cursor:wait}.primary-btn.small{width:auto;padding:9px 14px;font-size:13px}
 #joinBtn{margin-top:18px}
+#joinCode{width:100%;margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:white;outline:none;text-transform:uppercase;letter-spacing:8px;text-align:center;font-weight:700}
+#joinCode:focus{border-color:var(--blue)}
+#roomCodeBtn{font-weight:700;letter-spacing:2px;color:var(--text)}
 #loginError{color:#ff8c83;margin-top:12px;font-size:13px;min-height:1em}
 .secondary-btn{padding:9px 13px;border-radius:8px;background:var(--panel2);color:white;border:1px solid var(--border);font-size:12px;white-space:nowrap}
 .secondary-btn:hover{background:var(--panel3)}
@@ -77,7 +80,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .volume-pill{position:absolute;right:8px;bottom:8px;z-index:4;display:flex;align-items:center;gap:6px;padding:5px 10px;background:#000a;border-radius:999px;transition:opacity .15s}
 .volume-pill span{font-size:12px}
 .participant-volume{width:80px;accent-color:var(--blue)}
-@media(hover:hover){.card-actions,.volume-pill{opacity:0}.video-card:hover .card-actions,.video-card:hover .volume-pill,.card-actions:focus-within,.volume-pill:focus-within{opacity:1}}
+.screen-pill{position:absolute;right:8px;bottom:48px;z-index:4;display:none;align-items:center;gap:6px;padding:5px 10px;background:#000a;border-radius:999px;transition:opacity .15s;font-size:11px}
+.screen-pill button{font-size:15px;width:24px;height:24px}.screen-pill span{white-space:nowrap}
+@media(hover:hover){.card-actions,.volume-pill,.screen-pill{opacity:0}.video-card:hover .card-actions,.video-card:hover .volume-pill,.video-card:hover .screen-pill,.card-actions:focus-within,.volume-pill:focus-within,.screen-pill:focus-within{opacity:1}}
 
 /* ---------- Painel lateral ---------- */
 #sidePanel{width:350px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:none;flex-direction:column;min-height:0}
@@ -119,6 +124,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .poll-opt.voted{border-color:var(--blue)}
 .poll-fill{position:absolute;inset:0 auto 0 0;background:#29436b;z-index:0;transition:width .25s}
 .poll-opt>span{position:relative;z-index:1;overflow-wrap:anywhere}.poll-opt .n{color:var(--muted);white-space:nowrap}
+.mention{color:var(--blue);font-weight:600;background:#8ab4f822;border-radius:4px;padding:0 3px}.mention.me{color:#ffd479;background:#f4c45e2b}.message.mentioned{box-shadow:inset 3px 0 0 var(--yellow)}
+#mentionList{display:none;margin:0 10px 6px;border:1px solid var(--border);background:var(--panel2);border-radius:12px;overflow:hidden}
+#mentionList button{display:block;width:100%;text-align:left;padding:9px 12px;font-size:13px}#mentionList button.sel,#mentionList button:hover{background:var(--panel3)}
+.card-actions .kick-btn:hover{background:#b33}
 .empty{color:var(--muted);font-size:13px;text-align:center;margin:20px 0}
 
 /* ---------- Barra de controles ---------- */
@@ -167,7 +176,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  #videoGrid[data-n="1"]{max-width:100%}
  .video-card{min-height:105px;border-radius:12px}
  .participant-name{left:6px;bottom:6px;font-size:11px;padding:5px 7px;max-width:50%}
- .volume-pill{right:6px;bottom:6px;padding:4px 8px}.volume-pill span{display:none}.participant-volume{width:60px}
+ .volume-pill{right:6px;bottom:6px;padding:4px 8px}.volume-pill span,.screen-pill span{display:none}.screen-pill{right:6px;bottom:40px;padding:4px 8px}.participant-volume{width:60px}
  #sidePanel{position:absolute;inset:0;width:100%;z-index:20;border:0}
  .bottom-bar{padding:4px 8px calc(8px + env(safe-area-inset-bottom))}
  .dock{gap:5px;padding:6px 8px;border-radius:20px}
@@ -191,6 +200,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <p>Conecte-se por vídeo, áudio e mensagens em tempo real. Compartilhe sua tela e converse com quem quiser.</p>
   <input id="userName" type="text" maxlength="30" placeholder="Digite seu nome" autocomplete="name">
   <div id="loginAvatar"></div>
+  <input id="joinCode" type="text" maxlength="4" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Código da sala (opcional)">
   <button class="primary-btn" id="joinBtn">Entrar na sala</button>
   <div id="loginError"></div>
  </div>
@@ -199,7 +209,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <section id="meetingScreen">
  <header class="topbar">
   <div class="logo">Discord<span>IA</span></div>
-  <div class="room-info"><span id="connectionStatus" class="pill">Conectando...</span><span id="participantCount" class="pill">1 participante</span><button class="copy-btn" id="copyLinkBtn">🔗 Copiar convite</button></div>
+  <div class="room-info"><button class="pill" id="roomCodeBtn" type="button" title="Copiar código da sala"></button><span id="connectionStatus" class="pill">Conectando...</span><span id="participantCount" class="pill">1 participante</span><button class="copy-btn" id="copyLinkBtn">🔗 Copiar convite</button></div>
  </header>
  <main class="main-content">
   <section class="video-area"><div id="videoGrid" data-n="0"></div></section>
@@ -216,6 +226,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <div class="tab-pane active" data-pane="chat" id="paneChat">
     <div id="messages"></div>
     <div id="imgPreview"><img id="imgPreviewThumb" alt=""><span class="grow">Imagem pronta para enviar</span><button class="secondary-btn" id="imgCancelBtn" type="button">Cancelar</button></div>
+    <div id="mentionList" role="listbox" aria-label="Sugestões de menção"></div>
     <form class="chat-input" id="chatForm">
      <button class="attach" id="attachBtn" type="button" title="Enviar imagem" aria-label="Enviar imagem">📎</button>
      <input id="chatInput" type="text" maxlength="1000" placeholder="Mensagem ou cole uma imagem..." autocomplete="off">
@@ -284,7 +295,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
      <option value="radio">Rádio / telefone</option>
     </select>
    </div>
-   <div class="setting full"><label for="screenVolume">Volume do áudio compartilhado</label><div class="range-row"><input id="screenVolume" type="range" min="0" max="200" value="100"><output id="screenVolumeValue">100%</output></div></div>
+   <div class="setting full"><label class="setting-check"><input id="duckEnabled" type="checkbox" checked> Baixar o som da tela quando alguém fala</label></div>
    <div class="setting"><label for="screenResolution">Resolução do compartilhamento</label><select id="screenResolution"><option value="auto">Automática</option><option value="480">480p — leve</option><option value="720" selected>720p — equilibrada</option><option value="1080">1080p — alta</option></select></div>
    <div class="setting"><label for="screenFps">Quadros por segundo</label><select id="screenFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></div>
    <div class="setting"><label for="microphoneSelect">Microfone</label><select id="microphoneSelect"><option value="">Padrão do sistema</option></select></div>
@@ -292,10 +303,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <div class="setting full"><label for="outputSelect">Saída de áudio</label><select id="outputSelect"><option value="">Padrão do sistema</option></select></div>
    <div class="setting full"><label for="micMeter">Nível do microfone</label><div style="height:7px;background:#30333b;border-radius:8px;overflow:hidden"><div id="micMeter" style="height:100%;width:0;background:var(--green);transition:width .08s"></div></div><div><button class="secondary-btn" id="testAudioBtn" type="button">▶ Testar áudio</button></div></div>
    <div class="setting full"><label class="setting-check"><input id="hideVideos" type="checkbox"> Ocultar o vídeo dos outros participantes</label></div>
-   <div class="setting full"><label class="setting-check"><input id="soundsEnabled" type="checkbox" checked> Sons de entrada, saída, microfone e câmera</label></div>
+   <div class="setting full"><label class="setting-check"><input id="keepAwake" type="checkbox" checked> Manter a tela ligada durante a chamada</label></div>
+   <div class="setting full"><label class="setting-check"><input id="soundsEnabled" type="checkbox" checked> Sons de entrada, saída, microfone, câmera e menções</label></div>
    <div class="setting full"><label class="setting-check"><input id="pushToTalk" type="checkbox"> Push to Talk (segure Espaço para falar)</label></div>
   </div>
-  <p class="settings-note">O controle de volume da transmissão altera o áudio do sistema compartilhado, sem aumentar o volume da sua voz. O volume de cada participante fica no próprio cartão. Amplificação acima de 100% pode causar distorção. O efeito de voz vale para quem ouve você. Algumas opções de dispositivos e áudio dependem do navegador.</p>
+  <p class="settings-note">O volume da voz e do som da tela de cada pessoa fica no cartão dela, e cada um ajusta o seu. Amplificação acima de 100% pode causar distorção. O efeito de voz vale para quem ouve você. Algumas opções de dispositivos e áudio dependem do navegador.</p>
  </div>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -305,8 +317,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const params=new URLSearchParams(location.search);
-let roomId=params.get('room'),isHost=!roomId;
-if(isHost){roomId='sala-'+crypto.randomUUID().replaceAll('-','').slice(0,16);history.replaceState({},'','?room='+encodeURIComponent(roomId))}
+const CODE_LETTERS='ABCDEFGHJKLMNPQRSTUVWXYZ';
+const makeCode=()=>{const a=new Uint8Array(4);crypto.getRandomValues(a);return Array.from(a,x=>CODE_LETTERS[x%CODE_LETTERS.length]).join('')};
+const cleanCode=s=>String(s||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
+let roomCode=cleanCode(params.get('sala')),isHost=roomCode.length!==4;
+if(isHost)roomCode=makeCode();
+let roomId='discordia-'+roomCode.toLowerCase();
+function setRoomCode(code){roomCode=code;roomId='discordia-'+code.toLowerCase();history.replaceState({},'','?sala='+code)}
+setRoomCode(roomCode);
 
 /* ===================== Configurações ===================== */
 const REACTIONS=['👍','👏','😂','😮','❤️','🔥','🎉','😢'];
@@ -326,7 +344,7 @@ const PITCH_FX={grave:.72,agudo:1.7};
 
 /* ===================== Estado ===================== */
 let peer=null,myId=null,myName='',localStream=null,screenStream=null,sharingScreen=false,micEnabled=true,cameraEnabled=true;
-let audioContext=null,mixedAudioTrack=null,screenGainNode=null,micMixSource=null,screenMixSource=null;
+let audioContext=null,screenMixSource=null,duckEnabled=true;
 let localAnalyser=null,localAnalyserSource=null,localAnalyserGain=null,localSilentGain=null,voiceTimer=null,statsTimer=null,toastTimer=null,videoObserver=null,hideRemoteVideos=false;
 const members=new Map(),dataConnections=new Map(),mediaConnections=new Map(),pendingCalls=new Set(),audioRoutes=new Map(),speakingUntil=new Map(),qualityState=new Map(),profiles=new Map();
 let pinnedParticipantId=null;
@@ -343,7 +361,7 @@ function toast(message,duration=3500){const el=$('toast');el.textContent=message
 function setStatus(message){$('connectionStatus').textContent=message}
 function updateCount(){$('participantCount').textContent=(members.size+1)+(members.size===0?' participante':' participantes')}
 function playUiSound(){if(!soundsEnabled||!audioContext)return;try{const osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type='sine';osc.frequency.value=660;gain.gain.setValueAtTime(.0001,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.035,audioContext.currentTime+.012);gain.gain.exponentialRampToValueAtTime(.0001,audioContext.currentTime+.095);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.1)}catch(e){}}
-async function ensureAudioContext(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!audioContext)audioContext=new C({latencyHint:'interactive'});if(audioContext.state==='suspended')await audioContext.resume();return audioContext}
+async function ensureAudioContext(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!audioContext){audioContext=new C({latencyHint:'interactive'});audioContext.onstatechange=()=>{if(joined&&!leaving&&audioContext&&(audioContext.state==='suspended'||audioContext.state==='interrupted'))audioContext.resume().catch(()=>{})}}if(audioContext.state==='suspended')await audioContext.resume();return audioContext}
 function updateGridCount(){$('videoGrid').dataset.n=$('videoGrid').children.length}
 function updateControls(){
  $('micBtn').classList.toggle('off',!micEnabled);$('micBtn').classList.toggle('active',micEnabled);setIcon('micBtn',micEnabled?'🎤':'🔇');
@@ -448,12 +466,23 @@ function createVideoCard(id,name,stream,local=false){
   const pin=document.createElement('button');pin.className='pin-btn';pin.type='button';pin.title='Fixar participante';pin.setAttribute('aria-label','Fixar participante');pin.textContent='📌';pin.addEventListener('click',()=>togglePinParticipant(id));
   const fullscreen=document.createElement('button');fullscreen.type='button';fullscreen.title='Ver vídeo/compartilhamento em tela cheia';fullscreen.setAttribute('aria-label','Ver em tela cheia');fullscreen.textContent='⛶';fullscreen.addEventListener('click',()=>openVideoFullscreen(card,video));
   actions.append(pin,fullscreen);
+  if(isHost){const kick=document.createElement('button');kick.className='kick-btn';kick.type='button';kick.title='Remover da chamada';kick.setAttribute('aria-label','Remover da chamada');kick.textContent='🚪';kick.addEventListener('click',()=>{if(confirm('Remover '+nameOf(id)+' da chamada?'))kickParticipant(id)});actions.append(kick)}
   if(pinnedParticipantId===id){card.classList.add('pinned');pin.classList.add('active')}
   const pill=document.createElement('div');pill.className='volume-pill';
   const icon=document.createElement('span');icon.textContent='🔊';
   const volume=document.createElement('input');volume.className='participant-volume';volume.type='range';volume.min='0';volume.max='200';volume.value='100';volume.title='Volume deste participante: 100%';volume.setAttribute('aria-label','Volume individual do participante');
   volume.addEventListener('input',()=>{const route=audioRoutes.get(id);if(route){route.gain.gain.setTargetAtTime(Number(volume.value)/100,audioContext.currentTime,.025);volume.title='Volume deste participante: '+volume.value+'%'}});
   pill.append(icon,volume);card.append(actions,pill);
+  const pref=screenPrefs.get(id)||{vol:100,muted:false};screenPrefs.set(id,pref);
+  const spill=document.createElement('div');spill.className='screen-pill';spill.id='spill-'+id;spill.style.display=sharers.has(id)?'flex':'none';
+  const slabel=document.createElement('span');slabel.textContent='Som da tela';
+  const sbtn=document.createElement('button');sbtn.type='button';
+  const srange=document.createElement('input');srange.type='range';srange.min='0';srange.max='200';srange.value=String(pref.vol);srange.className='participant-volume';srange.setAttribute('aria-label','Volume do som da tela');
+  const sync=()=>{sbtn.textContent=(pref.muted||pref.vol===0)?'🔇':'🖥️';sbtn.title=(pref.muted?'Ativar':'Silenciar')+' o som da tela';srange.title='Som da tela: '+(pref.muted?0:pref.vol)+'%'};
+  const apply=()=>{const r=audioRoutes.get(id);if(r?.sGain&&audioContext)r.sGain.gain.setTargetAtTime(pref.muted?0:pref.vol/100,audioContext.currentTime,.03)};
+  srange.addEventListener('input',()=>{pref.vol=Number(srange.value);if(pref.vol>0)pref.muted=false;apply();sync()});
+  sbtn.addEventListener('click',()=>{pref.muted=!pref.muted;apply();sync()});
+  sync();spill.append(slabel,sbtn,srange);card.append(spill);
  }
  $('videoGrid').append(card);video.play().catch(()=>{});
  if(!local&&videoObserver)videoObserver.observe(video);
@@ -465,16 +494,31 @@ function updateVideoStatus(id,mic,camera){
  if(status){const old=status.querySelector('.status-icon');if(old)old.textContent=mic?'🎤':'🔇'}
  const video=card.querySelector('video'),avatar=card.querySelector('.avatar');if(avatar)avatar.style.display=(camera&&!hideRemoteVideos)?'none':'flex';if(video){video.style.visibility=(camera&&!hideRemoteVideos)?'visible':'hidden';if(hideRemoteVideos)video.pause();else video.play().catch(()=>{})}
 }
+const screenPrefs=new Map(),sharers=new Set();let autoPinId=null,pinBeforeShare=null;
 function attachAudioRoute(id,stream,local=false){
  if(!audioContext)return;const tracks=stream.getAudioTracks();if(!tracks.length)return;
  try{
-  const audioStream=new MediaStream(tracks),source=audioContext.createMediaStreamSource(audioStream),gain=audioContext.createGain(),analyser=audioContext.createAnalyser(),monitorGain=audioContext.createGain();
+  const source=audioContext.createMediaStreamSource(new MediaStream([tracks[0]])),gain=audioContext.createGain(),analyser=audioContext.createAnalyser(),monitorGain=audioContext.createGain();
   analyser.fftSize=256;gain.gain.value=defaultGain;monitorGain.gain.value=0;source.connect(gain);source.connect(analyser);analyser.connect(monitorGain);monitorGain.connect(audioContext.destination);
-  if(local){localAnalyser=analyser;localAnalyserSource=source;localAnalyserGain=gain;localSilentGain=monitorGain}
-  else{gain.connect(audioContext.destination);audioRoutes.set(id,{source,gain,analyser,monitorGain})}
+  if(local){localAnalyser=analyser;localAnalyserSource=source;localAnalyserGain=gain;localSilentGain=monitorGain;return}
+  gain.connect(audioContext.destination);const route={source,gain,analyser,monitorGain};
+  if(tracks[1]){
+   const pref=screenPrefs.get(id)||{vol:100,muted:false};
+   const sSource=audioContext.createMediaStreamSource(new MediaStream([tracks[1]])),sGain=audioContext.createGain(),sDuck=audioContext.createGain();
+   sGain.gain.value=pref.muted?0:pref.vol/100;sSource.connect(sGain);sGain.connect(sDuck);sDuck.connect(audioContext.destination);Object.assign(route,{sSource,sGain,sDuck});
+  }
+  audioRoutes.set(id,route);
  }catch(e){console.warn('Audio route:',e)}
 }
-function detachAudioRoute(id){const route=audioRoutes.get(id);if(!route)return;try{route.source.disconnect();route.gain.disconnect();route.analyser.disconnect();route.monitorGain?.disconnect()}catch(e){}audioRoutes.delete(id);speakingUntil.delete(id)}
+function detachAudioRoute(id){const route=audioRoutes.get(id);if(!route)return;try{route.source.disconnect();route.gain.disconnect();route.analyser.disconnect();route.monitorGain?.disconnect();route.sSource?.disconnect();route.sGain?.disconnect();route.sDuck?.disconnect()}catch(e){}audioRoutes.delete(id);speakingUntil.delete(id)}
+function updateDucking(now){
+ if(!audioContext)return;
+ const speaking=[myId,...members.keys()].filter(x=>x&&(speakingUntil.get(x)||0)>now);
+ audioRoutes.forEach((route,id)=>{
+  if(!route.sDuck)return;const target=duckEnabled&&speaking.some(x=>x!==id)?.3:1;
+  if(route.duckTarget!==target){route.duckTarget=target;route.sDuck.gain.setTargetAtTime(target,audioContext.currentTime,.12)}
+ });
+}
 function setSpeaking(id,active){const card=$('card-'+id);if(card)card.classList.toggle('speaking',active)}
 function readRms(analyser){if(!analyser)return 0;const data=new Uint8Array(analyser.fftSize);analyser.getByteTimeDomainData(data);let sum=0;for(let i=0;i<data.length;i++){const v=(data[i]-128)/128;sum+=v*v}return Math.sqrt(sum/data.length)}
 function startVoiceDetection(){
@@ -483,12 +527,28 @@ function startVoiceDetection(){
   const now=Date.now(),localLevel=readRms(localAnalyser);
   $('micMeter').style.width=Math.min(100,localLevel*260)+'%';if(localLevel>.035&&micEnabled)speakingUntil.set(myId,now+550);
   audioRoutes.forEach((route,id)=>{if(readRms(route.analyser)>.035)speakingUntil.set(id,now+550)});
-  for(const id of [myId,...members.keys()])setSpeaking(id,(speakingUntil.get(id)||0)>now);
+  for(const id of [myId,...members.keys()])setSpeaking(id,(speakingUntil.get(id)||0)>now);updateDucking(now);
  },140);
 }
 function applyVideoVisibility(card,id,local=false){if(!card||local)return;const video=card.querySelector('video'),avatar=card.querySelector('.avatar'),member=members.get(id);const camera=member?.camera!==false;card.classList.toggle('hidden-video',hideRemoteVideos);if(video){video.style.visibility=(camera&&!hideRemoteVideos)?'visible':'hidden';if(hideRemoteVideos)video.pause();else video.play().catch(()=>{})}if(avatar)avatar.style.display=(camera&&!hideRemoteVideos)?'none':'flex'}
 function setHideVideos(value){hideRemoteVideos=!!value;$('hideVideos').checked=hideRemoteVideos;for(const id of members.keys())applyVideoVisibility($('card-'+id),id)}
-function togglePinParticipant(id){pinnedParticipantId=pinnedParticipantId===id?null:id;for(const [pid] of members){const card=$('card-'+pid),btn=card?.querySelector('.pin-btn');if(card)card.classList.toggle('pinned',pinnedParticipantId===pid);if(btn){btn.classList.toggle('active',pinnedParticipantId===pid);btn.title=pinnedParticipantId===pid?'Desafixar participante':'Fixar participante'}}}
+function setPinned(id){
+ pinnedParticipantId=id||null;
+ for(const [pid] of members){const card=$('card-'+pid),btn=card?.querySelector('.pin-btn'),on=pinnedParticipantId===pid;if(card)card.classList.toggle('pinned',on);if(btn){btn.classList.toggle('active',on);btn.title=on?'Desafixar participante':'Fixar participante'}}
+}
+function togglePinParticipant(id){autoPinId=null;pinBeforeShare=null;setPinned(pinnedParticipantId===id?null:id)}
+function setSharing(id,on){
+ if(on)sharers.add(id);else sharers.delete(id);
+ const pill=$('spill-'+id);if(pill)pill.style.display=on?'flex':'none';
+ if(on){
+  if(autoPinId===null)pinBeforeShare=pinnedParticipantId;
+  autoPinId=id;setPinned(id);toast('🖥️ '+nameOf(id)+' está compartilhando a tela',3500);
+ }else if(autoPinId===id){
+  const other=[...sharers][0];
+  if(other){autoPinId=other;setPinned(other)}
+  else{const prev=pinBeforeShare;autoPinId=null;pinBeforeShare=null;setPinned(prev&&prev!==id&&members.has(prev)?prev:null)}
+ }
+}
 function testOutputAudio(){ensureAudioContext().then(ctx=>{if(!ctx)return;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=440;gain.gain.value=.07;osc.connect(gain);gain.connect(ctx.destination);osc.start();gain.gain.setTargetAtTime(.0001,ctx.currentTime+.35,.05);osc.stop(ctx.currentTime+.65)}).catch(()=>toast('Não foi possível testar o áudio.'))}
 function updateLocalPreview(){const card=$('card-'+myId);if(!card)return;const video=card.querySelector('video'),avatar=card.querySelector('.avatar');if(video&&!sharingScreen)video.srcObject=localStream;if(avatar)avatar.style.display=cameraEnabled?'none':'flex'}
 function updateMicTrack(){localStream?.getAudioTracks().forEach(t=>t.enabled=micEnabled);if(fxTrack)fxTrack.enabled=micEnabled}
@@ -510,10 +570,51 @@ function setPanel(open,tab){
  if(open&&activeTab==='polls')unreadPoll=false;
  refreshBadges();updateControls();
 }
+function escapeRe(t){return t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function mentionNames(){return [...new Set([myName,...[...members.values()].map(m=>m.name),'todos'])].filter(Boolean).sort((a,b)=>b.length-a.length)}
+function renderMentions(el,text){
+ if(!text.includes('@')){el.textContent=text;return false}
+ const re=new RegExp('@('+mentionNames().map(escapeRe).join('|')+')(?![\\p{L}\\p{N}_])','giu');
+ let last=0,found=false,mine=false;
+ for(const m of text.matchAll(re)){
+  const prev=text[m.index-1];if(prev&&/[\p{L}\p{N}_]/u.test(prev))continue;
+  if(m.index>last)el.append(document.createTextNode(text.slice(last,m.index)));
+  const span=document.createElement('span');span.className='mention';span.textContent=m[0];
+  const who=m[1].toLowerCase();if(who==='todos'||who===myName.toLowerCase()){span.classList.add('me');mine=true}
+  el.append(span);last=m.index+m[0].length;found=true;
+ }
+ if(!found){el.textContent=text;return false}
+ if(last<text.length)el.append(document.createTextNode(text.slice(last)));
+ return mine;
+}
+function playMentionSound(){
+ if(!soundsEnabled||!audioContext)return;
+ try{const t=audioContext.currentTime;[[880,0],[1318,.11]].forEach(([f,d])=>{const o=audioContext.createOscillator(),g=audioContext.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.12,t+d+.015);g.gain.exponentialRampToValueAtTime(.0001,t+d+.22);o.connect(g);g.connect(audioContext.destination);o.start(t+d);o.stop(t+d+.25)})}catch(e){}
+}
+function notifyMention(name){
+ playMentionSound();try{navigator.vibrate?.([80,60,80])}catch(e){}
+ if(!(panelOpen&&activeTab==='chat'))toast('🔔 '+name+' mencionou você',4000);
+}
 function addMessage(name,message,own=false){
  const item=document.createElement('div');item.className='message'+(own?' own':'');
- const author=document.createElement('strong');author.textContent=name;const content=document.createElement('p');content.textContent=message;
+ const author=document.createElement('strong');author.textContent=name;const content=document.createElement('p');
+ const mine=renderMentions(content,message);if(mine&&!own){item.classList.add('mentioned');notifyMention(name)}
  item.append(author,content,messageTime());appendMessage(item,own);
+}
+let mentionSel=0,mentionOpts=[];
+function updateMentionList(){
+ const input=$('chatInput'),box=$('mentionList'),pos=input.selectionStart??input.value.length,m=input.value.slice(0,pos).match(/(?:^|\s)@([^\s@]*)$/);
+ if(!m){box.style.display='none';mentionOpts=[];return}
+ const q=m[1].toLowerCase();
+ mentionOpts=[...members.values()].map(x=>x.name).concat(['todos']).filter((n,i,a)=>a.indexOf(n)===i&&n.toLowerCase().startsWith(q)).slice(0,5);
+ if(!mentionOpts.length){box.style.display='none';return}
+ mentionSel=Math.min(mentionSel,mentionOpts.length-1);box.replaceChildren();
+ mentionOpts.forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.textContent='@'+n;if(i===mentionSel)b.classList.add('sel');b.addEventListener('mousedown',e=>{e.preventDefault();pickMention(n)});box.append(b)});
+ box.style.display='block';
+}
+function pickMention(name){
+ const input=$('chatInput'),pos=input.selectionStart??input.value.length,before=input.value.slice(0,pos).replace(/@([^\s@]*)$/,'@'+name+' ');
+ input.value=before+input.value.slice(pos);input.setSelectionRange(before.length,before.length);$('mentionList').style.display='none';mentionOpts=[];input.focus();
 }
 function messageTime(){const time=document.createElement('small');time.textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return time}
 function appendMessage(item,own){
@@ -684,16 +785,16 @@ function makePollOptionInput(n){const i=document.createElement('input');i.type='
 /* ===================== Rede ===================== */
 function sendRoster(conn){if(!conn?.open)return;const list=[{id:myId,name:myName,mic:micEnabled,camera:cameraEnabled},...Array.from(members.entries()).map(([id,info])=>({id,name:info.name,mic:info.mic,camera:info.camera}))];conn.send({type:'roster',members:list})}
 function broadcastRoster(){if(!isHost)return;dataConnections.forEach(sendRoster);updateCount()}
-function sendIntro(conn){try{conn.send({type:'profile',avatar:myAvatar});if(polls.size)conn.send({type:'pollsync',polls:serializePolls()})}catch(e){console.warn(e)}}
+function sendIntro(conn){try{conn.send({type:'profile',avatar:myAvatar});if(sharingScreen)conn.send({type:'share',on:true});if(polls.size)conn.send({type:'pollsync',polls:serializePolls()})}catch(e){console.warn(e)}}
 function setupDataConnection(conn){
  const id=conn.peer,existing=dataConnections.get(id);if(existing&&existing!==conn&&existing.open){conn.close();return}dataConnections.set(id,conn);
- conn.on('open',()=>{if(isHost&&!members.has(id)){const meta=conn.metadata||{};members.set(id,{name:meta.name||'Participante',mic:true,camera:true});playUiSound();ensureMediaConnection(id);broadcastRoster();sendRoster(conn)}sendIntro(conn)});
+ conn.on('open',()=>{cancelRemoval(id);if(isHost&&!members.has(id)){const meta=conn.metadata||{};members.set(id,{name:meta.name||'Participante',mic:true,camera:true});playUiSound();ensureMediaConnection(id);broadcastRoster();sendRoster(conn)}sendIntro(conn)});
  conn.on('data',payload=>handleData(id,payload));
- conn.on('close',()=>{if(dataConnections.get(id)===conn)dataConnections.delete(id);if(members.has(id)){removeParticipant(id,true);if(isHost)broadcastRoster()}});
+ conn.on('close',()=>{if(dataConnections.get(id)!==conn)return;dataConnections.delete(id);if(leaving||!members.has(id))return;scheduleRemoval(id);if(!isHost&&id===roomId&&joined)scheduleRecover(800)});
  conn.on('error',e=>console.warn('Data connection:',e));
 }
 function handleData(id,payload){
- if(!payload||typeof payload!=='object')return;
+ if(!payload||typeof payload!=='object')return;cancelRemoval(id);
  switch(payload.type){
   case 'hello':
    if(!isHost)return;
@@ -709,11 +810,19 @@ function handleData(id,payload){
   case 'poll':{if(!validPollShape(payload))return;if(addPoll(payload,id)){if(!(panelOpen&&activeTab==='polls')){unreadPoll=true;refreshBadges()}toast('📊 Nova enquete de '+nameOf(id),2500);renderPolls()}return}
   case 'vote':{const poll=polls.get(payload.id);if(!poll||!Number.isInteger(payload.idx)||payload.idx<0||payload.idx>=poll.opts.length)return;poll.votes.set(id,payload.idx);renderPolls();return}
   case 'pollsync':mergePollSync(payload.polls,id);return;
+  case 'share':setSharing(id,!!payload.on);return;
+  case 'kick':if(!isHost&&id===roomId){store.set('discordia.kicked',String(Date.now()));leaveMeeting()}return;
+  case 'recall':if(myId&&myId.localeCompare(id)<0){const call=mediaConnections.get(id);if(call){mediaConnections.delete(id);try{call.close()}catch(e){}}ensureMediaConnection(id)}return;
   case 'img':handleImageChunk(id,payload);return;
  }
 }
+function kickParticipant(id){
+ if(!isHost)return;
+ try{const conn=dataConnections.get(id);if(conn?.open)conn.send({type:'kick'})}catch(e){}
+ setTimeout(()=>{if(members.has(id)){removeParticipant(id,true);broadcastRoster()}},350);toast('Participante removido da chamada.');
+}
 function removeParticipant(id,sound=true){
- const existed=members.has(id);members.delete(id);profiles.delete(id);pendingCalls.delete(id);$('card-'+id)?.remove();detachAudioRoute(id);if(pinnedParticipantId===id)pinnedParticipantId=null;
+ cancelRemoval(id);if(sharers.has(id))setSharing(id,false);screenPrefs.delete(id);const existed=members.has(id);members.delete(id);profiles.delete(id);pendingCalls.delete(id);$('card-'+id)?.remove();detachAudioRoute(id);if(pinnedParticipantId===id)pinnedParticipantId=null;
  for(const [key,t] of incomingImages)if(key.startsWith(id+':')){clearTimeout(t.timer);incomingImages.delete(key)}
  const media=mediaConnections.get(id);if(media){mediaConnections.delete(id);try{media.close()}catch(e){}}
  const data=dataConnections.get(id);if(data){dataConnections.delete(id);try{data.close()}catch(e){}}
@@ -726,40 +835,73 @@ function processRoster(list){
  updateCount();
 }
 function ensureDataConnection(id){if(!peer||id===myId||dataConnections.has(id))return;if(myId.localeCompare(id)>0)return;try{setupDataConnection(peer.connect(id,{reliable:true,serialization:'json',metadata:{name:myName}}))}catch(e){console.warn(e)}}
+let screenOutDest=null;
+function ensureScreenOut(){if(!screenOutDest&&audioContext)screenOutDest=audioContext.createMediaStreamDestination();return screenOutDest}
 function getMicTrack(){return fxTrack||localStream?.getAudioTracks()[0]}
-function getOutgoingAudioTrack(){return sharingScreen&&mixedAudioTrack?mixedAudioTrack:getMicTrack()}
+function getScreenOutTrack(){return screenOutDest?.stream.getAudioTracks()[0]}
 function getOutgoingStream(){
  const video=sharingScreen?screenStream?.getVideoTracks()[0]:localStream?.getVideoTracks()[0];
- return new MediaStream([video,getOutgoingAudioTrack()].filter(Boolean));
+ return new MediaStream([video,getMicTrack(),getScreenOutTrack()].filter(Boolean));
 }
+async function applyScreenSenderState(call,active=sharingScreen){
+ const pc=call.peerConnection;if(!pc)return;
+ const sender=pc.getSenders().filter(x=>x.track?.kind==='audio')[1];if(!sender)return;
+ try{const prm=sender.getParameters();if(!prm.encodings||!prm.encodings.length||prm.encodings[0].active===active)return;prm.encodings[0].active=active;await sender.setParameters(prm)}catch(e){}
+}
+async function setScreenSenders(active){await Promise.all([...mediaConnections.values()].map(c=>applyScreenSenderState(c,active)))}
 function ensureMediaConnection(id){if(!peer||!localStream||id===myId||mediaConnections.has(id)||pendingCalls.has(id)||myId.localeCompare(id)>0)return;pendingCalls.add(id);try{const call=peer.call(id,getOutgoingStream(),{metadata:{name:myName}});if(!call){pendingCalls.delete(id);return}setupMediaConnection(call)}catch(e){pendingCalls.delete(id);console.error(e)}}
 function setupMediaConnection(call){
  const id=call.peer;pendingCalls.delete(id);const previous=mediaConnections.get(id);if(previous&&previous!==call)previous.close();mediaConnections.set(id,call);
  call.on('stream',stream=>{if(mediaConnections.get(id)!==call)return;const member=members.get(id);$('card-'+id)?.remove();detachAudioRoute(id);createVideoCard(id,member?.name||call.metadata?.name||'Participante',stream);attachAudioRoute(id,stream,false);updateVideoStatus(id,member?.mic!==false,member?.camera!==false);updateCount()});
  call.on('close',()=>{pendingCalls.delete(id);if(mediaConnections.get(id)===call){mediaConnections.delete(id);detachAudioRoute(id);$('card-'+id)?.remove()}});
  call.on('error',e=>console.warn('Media connection:',e));
- const pc=call.peerConnection;if(pc){pc.addEventListener('connectionstatechange',()=>{if(pc.connectionState==='failed'){if(mediaConnections.get(id)===call)mediaConnections.delete(id);detachAudioRoute(id);$('card-'+id)?.remove();try{call.close()}catch(e){}setTimeout(()=>ensureMediaConnection(id),2200)}else if(pc.connectionState==='disconnected'){setTimeout(()=>{if(pc.connectionState==='disconnected'&&mediaConnections.get(id)===call){mediaConnections.delete(id);try{call.close()}catch(e){}setTimeout(()=>ensureMediaConnection(id),1800)}},5000)}})}
+ const pc=call.peerConnection;if(pc){pc.addEventListener('connectionstatechange',()=>{if(pc.connectionState==='connected')applyScreenSenderState(call);if(pc.connectionState==='failed'){if(mediaConnections.get(id)===call)mediaConnections.delete(id);detachAudioRoute(id);$('card-'+id)?.remove();try{call.close()}catch(e){}setTimeout(()=>ensureMediaConnection(id),2200)}else if(pc.connectionState==='disconnected'){setTimeout(()=>{if(pc.connectionState==='disconnected'&&mediaConnections.get(id)===call){mediaConnections.delete(id);try{call.close()}catch(e){}setTimeout(()=>ensureMediaConnection(id),1800)}},5000)}})}
 }
 function initializeVideoObserver(){if(!('IntersectionObserver' in window))return;videoObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{const video=entry.target;if(!video.isConnected)return;if(entry.isIntersecting&&!hideRemoteVideos)video.play().catch(()=>{});else video.pause()})},{root:$('videoGrid').parentElement,rootMargin:'80px',threshold:.05})}
+let peerOptions=null,peerAttempts=0,everOpened=false,leaving=false,recovering=false,recoverTimer=null;
 function initializePeer(){
- const options={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}],sdpSemantics:'unified-plan'}};
- peer=isHost?new Peer(roomId,options):new Peer(options);
- peer.on('open',id=>{myId=id;setStatus('Conectado');createVideoCard(myId,myName,localStream,true);attachAudioRoute(myId,localStream,true);if(isHost){toast('Sala criada! Compartilhe o convite.');updateCount()}else connectToHost();startVoiceDetection();startStatsMonitoring();renderPolls()});
- peer.on('call',call=>{call.answer(getOutgoingStream());setupMediaConnection(call)});
- peer.on('connection',setupDataConnection);
- peer.on('error',error=>{console.error('PeerJS:',error);if(error.type==='unavailable-id')showLoginError('Esta sala já está ocupada ou não pode ser criada. Gere outra sala.');else if(error.type==='peer-unavailable'&&!isHost)toast('Anfitrião não encontrado. Verifique o convite.');else toast('Problema na conexão. Verifique sua internet.')});
- peer.on('disconnected',()=>{setStatus('Reconectando...');if(!peer.destroyed)peer.reconnect()});
+ peerOptions={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}],sdpSemantics:'unified-plan'}};
+ createPeer();
 }
-function connectToHost(){setStatus('Entrando na sala...');const conn=peer.connect(roomId,{reliable:true,serialization:'json',metadata:{name:myName}});setupDataConnection(conn);conn.on('open',()=>{conn.send({type:'hello',name:myName});setStatus('Conectado à sala');toast('Você entrou na chamada!')});conn.on('error',()=>toast('Não foi possível conectar ao anfitrião.'));setTimeout(()=>{if(!conn.open&&joined)toast('Aguardando o anfitrião da sala...')},6000)}
+function createPeer(){
+ const oldId=myId,p=isHost?new Peer(roomId,peerOptions):new Peer(peerOptions);peer=p;
+ p.on('open',id=>{
+  if(p!==peer)return;peerAttempts=0;everOpened=true;
+  if(oldId&&oldId!==id){$('card-'+oldId)?.remove();speakingUntil.delete(oldId)}
+  myId=id;setStatus('Conectado');
+  if(!$('card-'+myId))createVideoCard(myId,myName,sharingScreen&&screenStream?screenStream:localStream,true);
+  if(!localAnalyser)attachAudioRoute(myId,localStream,true);
+  if(isHost){if(!oldId)toast('Sala criada! Compartilhe o convite ou o código '+roomCode+'.');updateCount()}else connectToHost();
+  startVoiceDetection();startStatsMonitoring();renderPolls();
+ });
+ p.on('call',call=>{if(p!==peer)return;call.answer(getOutgoingStream());setupMediaConnection(call)});
+ p.on('connection',conn=>{if(p===peer)setupDataConnection(conn)});
+ p.on('error',error=>{
+  if(p!==peer||leaving)return;console.warn('PeerJS:',error.type,error);
+  if(error.type==='unavailable-id'){
+   if(peerAttempts++>=8){toast('Não foi possível criar a sala. Recarregue a página.');return}
+   try{p.destroy()}catch(e){}
+   if(!everOpened){setRoomCode(makeCode());$('roomCodeBtn').textContent='Sala '+roomCode;createPeer()}
+   else setTimeout(()=>{if(joined&&!leaving)createPeer()},2500);
+  }else if(error.type==='peer-unavailable'){
+   if(!isHost){toast('Sala '+roomCode+' não encontrada. Confira o código.');if(hostEverConnected)scheduleRecover(5000)}
+  }else{setStatus('Reconectando...');scheduleRecover(3000)}
+ });
+ p.on('disconnected',()=>{if(p!==peer||leaving)return;setStatus('Reconectando...');setTimeout(()=>{if(p===peer&&!p.destroyed&&p.disconnected&&!leaving)p.reconnect()},1000)});
+ p.on('close',()=>{if(p===peer&&!leaving)scheduleRecover(1500)});
+}
+function connectToHost(){setStatus('Entrando na sala...');const conn=peer.connect(roomId,{reliable:true,serialization:'json',metadata:{name:myName}});setupDataConnection(conn);conn.on('open',()=>{conn.send({type:'hello',name:myName});setStatus('Conectado à sala');if(!hostEverConnected)toast('Você entrou na chamada!');hostEverConnected=true});conn.on('error',()=>toast('Não foi possível conectar ao anfitrião.'));setTimeout(()=>{if(!conn.open&&joined)toast('Aguardando o anfitrião da sala...')},6000)}
 function showLoginError(message){$('loginError').textContent=message}
 async function joinMeeting(){
  if(joined)return;myName=$('userName').value.trim();if(!myName){showLoginError('Digite seu nome para continuar.');return}
+ if(isHost){const typed=cleanCode($('joinCode').value);if($('joinCode').value.trim()&&typed.length!==4){showLoginError('O código da sala tem 4 letras.');return}if(typed.length===4){isHost=false;setRoomCode(typed)}}
+ $('roomCodeBtn').textContent='Sala '+roomCode;
  if(!navigator.mediaDevices?.getUserMedia){showLoginError('Seu navegador não permite câmera e microfone. Utilize HTTPS ou localhost.');return}
  if(!window.Peer){showLoginError('Não foi possível carregar o sistema de conexão.');return}
  $('joinBtn').disabled=true;$('joinBtn').textContent='Solicitando permissões...';
  try{
   localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:{width:{ideal:innerWidth<760?640:1280},height:{ideal:innerWidth<760?480:720},facingMode:'user'}});
-  joined=true;saveProfile();$('loginScreen').style.display='none';$('meetingScreen').style.display='flex';await ensureAudioContext();initializeVideoObserver();initializePeer();updateControls();await refreshDevices();
+  joined=true;saveProfile();$('loginScreen').style.display='none';$('meetingScreen').style.display='flex';await ensureAudioContext();ensureScreenOut();initializeVideoObserver();initializePeer();updateControls();startKeepAlive();requestWakeLock();startWatchdog();await refreshDevices();
  }catch(error){console.error(error);joined=false;showLoginError(error.name==='NotAllowedError'||error.name==='PermissionDeniedError'?'Permissão negada. Autorize câmera e microfone no navegador.':error.name==='NotFoundError'?'Não encontramos câmera ou microfone disponível.':error.name==='NotReadableError'?'A câmera ou o microfone já está sendo usado por outro aplicativo.':'Não foi possível acessar os dispositivos. Verifique as permissões e tente novamente.');$('joinBtn').disabled=false;$('joinBtn').textContent='Entrar na sala'}
 }
 async function replaceOutgoingTrack(kind,track){await Promise.all([...mediaConnections.values()].map(async call=>{const pc=call.peerConnection;if(!pc)return;const sender=pc.getSenders().find(s=>s.track?.kind===kind);if(sender)try{await sender.replaceTrack(track||null)}catch(e){console.warn('replaceTrack:',e)}}))}
@@ -824,7 +966,7 @@ function disposeFx(old){
  for(const n of old.nodes){try{if(n.stop)n.stop()}catch(e){}try{n.disconnect()}catch(e){}}
  try{old.source?.disconnect()}catch(e){}try{old.dest?.disconnect()}catch(e){}try{old.track?.stop()}catch(e){}
 }
-async function syncOutgoingAudio(){if(sharingScreen)await prepareScreenAudio(true);await replaceOutgoingTrack('audio',getOutgoingAudioTrack())}
+async function syncOutgoingAudio(){await replaceOutgoingTrack('audio',getMicTrack())}
 async function applyVoiceFx(name){
  const token=++fxToken,ctx=await ensureAudioContext(),raw=localStream?.getAudioTracks()[0];if(!ctx||!raw)return;
  const pitch=PITCH_FX[name];let ok=true;if(pitch)ok=await ensurePitchWorklet();
@@ -838,17 +980,12 @@ async function applyVoiceFx(name){
 }
 
 /* ===================== Compartilhamento de tela ===================== */
-async function closeScreenMix(){if(screenMixSource){try{screenMixSource.disconnect()}catch(e){}screenMixSource=null}if(micMixSource){try{micMixSource.disconnect()}catch(e){}micMixSource=null}screenGainNode=null;mixedAudioTrack=null}
+async function closeScreenMix(){if(screenMixSource){try{screenMixSource.disconnect()}catch(e){}screenMixSource=null}}
 async function prepareScreenAudio(quiet=false){
  await closeScreenMix();const ctx=await ensureAudioContext();if(!ctx)return;
- try{
-  const destination=ctx.createMediaStreamDestination(),micTrack=getMicTrack(),screenTrack=screenStream?.getAudioTracks()[0];
-  const micGain=ctx.createGain();micGain.gain.value=1;
-  if(micTrack){micMixSource=ctx.createMediaStreamSource(new MediaStream([micTrack]));micMixSource.connect(micGain);micGain.connect(destination)}
-  if(screenTrack){screenMixSource=ctx.createMediaStreamSource(new MediaStream([screenTrack]));screenGainNode=ctx.createGain();screenGainNode.gain.value=Number($('screenVolume').value)/100;screenMixSource.connect(screenGainNode);screenGainNode.connect(destination)}
-  else if(!quiet)toast('O navegador não disponibilizou o áudio do sistema. Selecione “Compartilhar áudio” na janela de compartilhamento, quando disponível.',6500);
-  mixedAudioTrack=destination.stream.getAudioTracks()[0];
- }catch(e){console.warn('Mixagem de áudio:',e);mixedAudioTrack=screenStream?.getAudioTracks()[0]||getMicTrack();toast('Não foi possível separar o áudio da transmissão.')}
+ const dest=ensureScreenOut(),track=screenStream?.getAudioTracks()[0];
+ if(track&&dest){try{screenMixSource=ctx.createMediaStreamSource(new MediaStream([track]));screenMixSource.connect(dest)}catch(e){console.warn('Áudio da tela:',e);toast('Não foi possível enviar o áudio da tela.')}}
+ else if(!quiet)toast('O navegador não disponibilizou o áudio do sistema. Selecione “Compartilhar áudio” na janela de compartilhamento, quando disponível.',6500);
 }
 function getScreenConstraints(){
  const resolution=$('screenResolution').value,fps=Number($('screenFps').value);
@@ -858,21 +995,23 @@ function getScreenConstraints(){
 }
 async function stopScreenShare(){
  if(!sharingScreen)return;sharingScreen=false;
- try{await replaceOutgoingTrack('video',localStream.getVideoTracks()[0]);await replaceOutgoingTrack('audio',getMicTrack())}catch(e){console.error(e)}
- const video=$('card-'+myId)?.querySelector('video');if(video)video.srcObject=localStream;
+ try{await replaceOutgoingTrack('video',localStream.getVideoTracks()[0])}catch(e){console.error(e)}
+ await setScreenSenders(false);sendToAll({type:'share',on:false});
+ const video=$('card-'+myId)?.querySelector('video');if(video){video.srcObject=localStream;video.classList.add('mirror')}
  screenStream?.getTracks().forEach(t=>t.stop());screenStream=null;await closeScreenMix();updateControls();toast('Compartilhamento encerrado.');
 }
+let echoTipShown=false;
 async function startScreenShare(){
  if(!navigator.mediaDevices?.getDisplayMedia){toast('Este navegador ou dispositivo não suporta compartilhamento de tela.');return}
  try{
-  screenStream=await navigator.mediaDevices.getDisplayMedia({video:getScreenConstraints(),audio:true});
+  screenStream=await navigator.mediaDevices.getDisplayMedia({video:getScreenConstraints(),audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,suppressLocalAudioPlayback:true,restrictOwnAudio:true},systemAudio:'include',selfBrowserSurface:'exclude'});
   const track=screenStream.getVideoTracks()[0];if(!track)throw new Error('Nenhuma faixa de vídeo.');
-  sharingScreen=true;await prepareScreenAudio();await replaceOutgoingTrack('video',track);await replaceOutgoingTrack('audio',mixedAudioTrack||getMicTrack());
-  const video=$('card-'+myId)?.querySelector('video');if(video)video.srcObject=screenStream;
+  sharingScreen=true;await prepareScreenAudio();await replaceOutgoingTrack('video',track);await setScreenSenders(true);sendToAll({type:'share',on:true});
+  const video=$('card-'+myId)?.querySelector('video');if(video){video.srcObject=screenStream;video.classList.remove('mirror')}
   track.addEventListener('ended',stopScreenShare,{once:true});updateControls();toast('Sua tela está sendo compartilhada.');
+  if(!echoTipShown&&screenStream.getAudioTracks().length&&track.getSettings?.().displaySurface==='monitor'){echoTipShown=true;setTimeout(()=>toast('Dica: ao compartilhar a tela inteira com áudio, o som da chamada pode voltar como eco para os outros. Se isso acontecer, compartilhe uma aba ou uma janela.',9000),3800)}
  }catch(e){console.error(e);sharingScreen=false;if(screenStream)screenStream.getTracks().forEach(t=>t.stop());screenStream=null;await closeScreenMix();toast(e.name==='NotAllowedError'?'Compartilhamento cancelado ou negado.':'Não foi possível compartilhar sua tela.')}
 }
-function setScreenVolume(value){$('screenVolumeValue').textContent=value+'%';if(screenGainNode&&audioContext)screenGainNode.gain.setTargetAtTime(Number(value)/100,audioContext.currentTime,.03)}
 
 /* ===================== Dispositivos ===================== */
 async function refreshDevices(){
@@ -927,6 +1066,84 @@ async function adaptSenderQuality(call,quality){
 function updatePushToTalk(enabled){pushToTalk=enabled;if(enabled){pttHeld=false;toggleMic(false)}else toggleMic(true)}
 async function applyScreenSettings(){if(!sharingScreen)return;const track=screenStream?.getVideoTracks()[0];if(!track?.applyConstraints)return;try{await track.applyConstraints(getScreenConstraints());toast('Qualidade da transmissão atualizada.')}catch(e){toast('O navegador não permitiu alterar a qualidade durante a transmissão.')}}
 
+/* ===================== Segundo plano e reconexão ===================== */
+const pendingRemoval=new Map();
+let hostEverConnected=false,wakeLock=null,keepAliveEl=null,keepScreenOn=true,watchdogTimer=null;
+function cancelRemoval(id){const t=pendingRemoval.get(id);if(t){clearTimeout(t);pendingRemoval.delete(id)}}
+function scheduleRemoval(id){
+ if(!members.has(id)||pendingRemoval.has(id))return;
+ pendingRemoval.set(id,setTimeout(()=>{pendingRemoval.delete(id);const c=dataConnections.get(id);if((c&&c.open)||!members.has(id))return;removeParticipant(id,true);if(isHost)broadcastRoster()},isHost?15000:8000));
+}
+function scheduleRecover(ms){clearTimeout(recoverTimer);recoverTimer=setTimeout(recoverConnection,ms||0)}
+function rebindLocalAnalyser(){
+ try{localAnalyserSource?.disconnect();localAnalyserGain?.disconnect();localAnalyser?.disconnect();localSilentGain?.disconnect()}catch(e){}
+ localAnalyser=null;localAnalyserSource=null;localAnalyserGain=null;localSilentGain=null;if(audioContext&&myId)attachAudioRoute(myId,localStream,true);
+}
+async function recoverLocalMedia(){
+ if(!localStream)return;
+ const a=localStream.getAudioTracks()[0],v=localStream.getVideoTracks()[0];
+ const needA=!a||a.readyState==='ended',needV=!v||v.readyState==='ended';
+ if(!needA&&!needV)return;
+ try{
+  const s=await navigator.mediaDevices.getUserMedia({audio:needA?{echoCancellation:true,noiseSuppression:true,autoGainControl:true}:false,video:needV?{width:{ideal:innerWidth<760?640:1280},height:{ideal:innerWidth<760?480:720},facingMode:'user'}:false});
+  const nA=s.getAudioTracks()[0],nV=s.getVideoTracks()[0];
+  if(nV){if(v)localStream.removeTrack(v);localStream.addTrack(nV);nV.enabled=cameraEnabled;if(!sharingScreen)await replaceOutgoingTrack('video',nV);updateLocalPreview()}
+  if(nA){if(a)localStream.removeTrack(a);localStream.addTrack(nA);nA.enabled=micEnabled;rebindLocalAnalyser();await applyVoiceFx(voiceFx)}
+ }catch(e){console.warn('recoverLocalMedia:',e);toast('Não consegui reativar a câmera ou o microfone. Verifique as permissões.')}
+}
+async function recoverConnection(){
+ if(!joined||leaving||recovering)return;recovering=true;
+ try{
+  await ensureAudioContext().catch(()=>{});await recoverLocalMedia();
+  if(!peer||peer.destroyed){setStatus('Reconectando...');createPeer();return}
+  if(peer.disconnected){setStatus('Reconectando...');peer.reconnect();return}
+  if(!isHost&&hostEverConnected){const c=dataConnections.get(roomId);if(!c||!c.open){setStatus('Reconectando...');connectToHost()}}
+  members.forEach((_,id)=>{
+   const call=mediaConnections.get(id),st=call?.peerConnection?.connectionState;
+   if(call&&st!=='failed'&&st!=='closed'&&st!=='disconnected')return;
+   if(myId.localeCompare(id)<0){if(call){mediaConnections.delete(id);try{call.close()}catch(e){}}ensureMediaConnection(id)}
+   else{const dc=dataConnections.get(id);if(dc?.open)try{dc.send({type:'recall'})}catch(e){}}
+  });
+  members.forEach((_,id)=>{const c=dataConnections.get(id);if(!c||!c.open){if(c)dataConnections.delete(id);ensureDataConnection(id)}});
+ }finally{recovering=false}
+}
+function makeSilentWav(){
+ const rate=8000,n=rate,buf=new ArrayBuffer(44+n),v=new DataView(buf),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+ w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);new Uint8Array(buf,44).fill(128);
+ return new Blob([buf],{type:'audio/wav'});
+}
+function startKeepAlive(){
+ try{
+  if(!keepAliveEl){keepAliveEl=new Audio(URL.createObjectURL(makeSilentWav()));keepAliveEl.loop=true;keepAliveEl.volume=.01}
+  keepAliveEl.play().catch(()=>{});
+  if('mediaSession' in navigator){
+   navigator.mediaSession.metadata=new MediaMetadata({title:'Chamada em andamento',artist:'DiscordIA • Sala '+roomCode});
+   navigator.mediaSession.playbackState='playing';
+   const set=(a,fn)=>{try{navigator.mediaSession.setActionHandler(a,fn)}catch(e){}};
+   set('play',()=>keepAliveEl?.play().catch(()=>{}));set('togglemicrophone',()=>toggleMic());set('hangup',()=>leaveMeeting());
+  }
+ }catch(e){}
+}
+async function requestWakeLock(){
+ if(!keepScreenOn||!joined||!navigator.wakeLock||document.visibilityState!=='visible')return;
+ try{if(wakeLock&&!wakeLock.released)return;wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}catch(e){}
+}
+function releaseWakeLock(){try{wakeLock?.release()}catch(e){}wakeLock=null}
+async function resumeAfterBackground(){
+ try{await ensureAudioContext()}catch(e){}
+ keepAliveEl?.play().catch(()=>{});requestWakeLock();
+ document.querySelectorAll('#videoGrid video').forEach(v=>{if(!hideRemoteVideos)v.play().catch(()=>{})});
+ scheduleRecover(300);
+}
+function startWatchdog(){
+ if(watchdogTimer)clearInterval(watchdogTimer);
+ watchdogTimer=setInterval(()=>{
+  if(!joined||leaving||recovering||document.visibilityState!=='visible')return;
+  const c=dataConnections.get(roomId);
+  if(!peer||peer.destroyed||peer.disconnected||(!isHost&&hostEverConnected&&(!c||!c.open)))scheduleRecover(0);
+ },8000);
+}
+
 /* ===================== Eventos ===================== */
 buildSoundGrid();
 REACTIONS.forEach(emoji=>{const b=document.createElement('button');b.type='button';b.textContent=emoji;b.setAttribute('aria-label','Reagir com '+emoji);b.addEventListener('click',()=>sendReaction(emoji));$('reactionBar').append(b)});
@@ -961,13 +1178,21 @@ const chatPane=$('paneChat');
 chatPane.addEventListener('dragover',e=>{if([...(e.dataTransfer?.types||[])].includes('Files')){e.preventDefault();chatPane.classList.add('drag')}});
 chatPane.addEventListener('dragleave',()=>chatPane.classList.remove('drag'));
 chatPane.addEventListener('drop',e=>{e.preventDefault();chatPane.classList.remove('drag');const f=[...(e.dataTransfer?.files||[])].find(x=>x.type.startsWith('image/'));if(f)handleImageFile(f)});
+$('chatInput').addEventListener('input',()=>{mentionSel=0;updateMentionList()});
+$('chatInput').addEventListener('keydown',e=>{
+ if(!mentionOpts.length)return;
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();mentionSel=(mentionSel+(e.key==='ArrowDown'?1:-1)+mentionOpts.length)%mentionOpts.length;updateMentionList()}
+ else if(e.key==='Tab'||e.key==='Enter'){e.preventDefault();pickMention(mentionOpts[mentionSel])}
+ else if(e.key==='Escape'){$('mentionList').style.display='none';mentionOpts=[]}
+});
+$('chatInput').addEventListener('blur',()=>setTimeout(()=>{$('mentionList').style.display='none';mentionOpts=[]},150));
 $('pollForm').addEventListener('submit',e=>{e.preventDefault();createPoll()});
 $('addPollOpt').addEventListener('click',()=>{const box=$('pollOptions'),count=box.children.length;if(count>=4){toast('Máximo de 4 opções.');return}const input=makePollOptionInput(count+1);box.append(input);input.focus()});
 $('soundVolume').addEventListener('input',e=>{soundVolume=Number(e.target.value)/100});
 $('muteBoard').addEventListener('change',e=>{muteBoard=e.target.checked});
 $('voiceFx').addEventListener('change',e=>applyVoiceFx(e.target.value));
 $('hideVideos').addEventListener('change',e=>setHideVideos(e.target.checked));
-$('screenVolume').addEventListener('input',e=>setScreenVolume(e.target.value));
+$('duckEnabled').addEventListener('change',e=>{duckEnabled=e.target.checked;updateDucking(Date.now())});
 $('screenResolution').addEventListener('change',applyScreenSettings);$('screenFps').addEventListener('change',applyScreenSettings);
 $('soundsEnabled').addEventListener('change',e=>soundsEnabled=e.target.checked);
 $('pushToTalk').addEventListener('change',e=>updatePushToTalk(e.target.checked));
@@ -983,7 +1208,7 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('keyup',e=>{if(pushToTalk&&e.code==='Space'&&pttHeld){pttHeld=false;toggleMic(false)}});
 window.addEventListener('blur',()=>{if(pushToTalk&&pttHeld){pttHeld=false;toggleMic(false)}});
 async function leaveMeeting(){
- if(!joined)return;sendToAll({type:'leave'});playUiSound();if(sharingScreen)screenStream?.getTracks().forEach(t=>t.stop());localStream?.getTracks().forEach(t=>t.stop());
+ if(!joined)return;leaving=true;releaseWakeLock();keepAliveEl?.pause();sendToAll({type:'leave'});playUiSound();if(sharingScreen)screenStream?.getTracks().forEach(t=>t.stop());localStream?.getTracks().forEach(t=>t.stop());
  mediaConnections.forEach(c=>c.close());dataConnections.forEach(c=>c.close());if(peer&&!peer.destroyed)peer.destroy();
  if(voiceTimer)clearInterval(voiceTimer);if(statsTimer)clearInterval(statsTimer);for(const id of [...audioRoutes.keys()])detachAudioRoute(id);
  disposeFx({nodes:fxNodes,source:fxSource,dest:fxDest,track:fxTrack});clearPending();
@@ -992,8 +1217,17 @@ async function leaveMeeting(){
 }
 $('leaveBtn').addEventListener('click',()=>{if(confirm('Deseja realmente sair da chamada?'))leaveMeeting()});
 navigator.mediaDevices?.addEventListener?.('devicechange',()=>{if(joined)refreshDevices()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&joined&&!leaving)resumeAfterBackground()});
+window.addEventListener('pageshow',e=>{if(e.persisted&&joined&&!leaving)resumeAfterBackground()});
+window.addEventListener('online',()=>{if(joined&&!leaving)scheduleRecover(500)});
+$('keepAwake').addEventListener('change',e=>{keepScreenOn=e.target.checked;if(keepScreenOn)requestWakeLock();else releaseWakeLock()});
+$('roomCodeBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(roomCode);toast('Código '+roomCode+' copiado!')}catch(e){toast('Código da sala: '+roomCode)}});
+$('joinCode').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Za-z]/g,'')});
+$('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinMeeting()});
+try{const k=Number(store.get('discordia.kicked')||0);if(k){store.set('discordia.kicked','');if(Date.now()-k<60000)showLoginError('Você foi removido da sala pelo anfitrião.')}}catch(e){}
+if(!isHost){$('joinCode').style.display='none';$('joinBtn').textContent='Entrar na sala '+roomCode}
 renderPolls();updateControls();
-console.log('DiscordIA | Sala:',roomId,'| Anfitrião:',isHost);
+console.log('DiscordIA | Sala:',roomCode,'| Anfitrião:',isHost);
 </script>
 </body>
 </html>
