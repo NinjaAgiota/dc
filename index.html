@@ -28,6 +28,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 #joinCode{width:100%;margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:white;outline:none;text-transform:uppercase;letter-spacing:8px;text-align:center;font-weight:700}
 #joinCode:focus{border-color:var(--blue)}
 #roomCodeBtn{font-weight:700;letter-spacing:2px;color:var(--text)}
+@media(max-width:560px){#pipBtn .lbl{display:none}}
 #loginError{color:#ff8c83;margin-top:12px;font-size:13px;min-height:1em}
 .secondary-btn{padding:9px 13px;border-radius:8px;background:var(--panel2);color:white;border:1px solid var(--border);font-size:12px;white-space:nowrap}
 .secondary-btn:hover{background:var(--panel3)}
@@ -209,7 +210,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <section id="meetingScreen">
  <header class="topbar">
   <div class="logo">Discord<span>IA</span></div>
-  <div class="room-info"><button class="pill" id="roomCodeBtn" type="button" title="Copiar código da sala"></button><span id="connectionStatus" class="pill">Conectando...</span><span id="participantCount" class="pill">1 participante</span><button class="copy-btn" id="copyLinkBtn">🔗 Copiar convite</button></div>
+  <div class="room-info"><button class="pill" id="roomCodeBtn" type="button" title="Copiar código da sala"></button><span id="connectionStatus" class="pill">Conectando...</span><span id="participantCount" class="pill">1 participante</span><button class="copy-btn" id="pipBtn" type="button" title="Janela flutuante (Picture-in-Picture)">⧉<span class="lbl"> Flutuar</span></button><button class="copy-btn" id="copyLinkBtn">🔗 Copiar convite</button></div>
  </header>
  <main class="main-content">
   <section class="video-area"><div id="videoGrid" data-n="0"></div></section>
@@ -303,6 +304,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    <div class="setting full"><label for="outputSelect">Saída de áudio</label><select id="outputSelect"><option value="">Padrão do sistema</option></select></div>
    <div class="setting full"><label for="micMeter">Nível do microfone</label><div style="height:7px;background:#30333b;border-radius:8px;overflow:hidden"><div id="micMeter" style="height:100%;width:0;background:var(--green);transition:width .08s"></div></div><div><button class="secondary-btn" id="testAudioBtn" type="button">▶ Testar áudio</button></div></div>
    <div class="setting full"><label class="setting-check"><input id="hideVideos" type="checkbox"> Ocultar o vídeo dos outros participantes</label></div>
+   <div class="setting full"><label class="setting-check"><input id="autoPip" type="checkbox" checked> Abrir a janela flutuante ao sair do app (quando o navegador permitir)</label></div>
    <div class="setting full"><label class="setting-check"><input id="keepAwake" type="checkbox" checked> Manter a tela ligada durante a chamada</label></div>
    <div class="setting full"><label class="setting-check"><input id="soundsEnabled" type="checkbox" checked> Sons de entrada, saída, microfone, câmera e menções</label></div>
    <div class="setting full"><label class="setting-check"><input id="pushToTalk" type="checkbox"> Push to Talk (segure Espaço para falar)</label></div>
@@ -454,7 +456,7 @@ function createAvatarEditor(){
 /* ===================== Cartões de vídeo ===================== */
 function createVideoCard(id,name,stream,local=false){
  const card=document.createElement('div');card.className='video-card';card.id='card-'+id;
- const video=document.createElement('video');video.autoplay=true;video.playsInline=true;video.muted=true;video.srcObject=stream;if(local)video.classList.add('mirror');
+ const video=document.createElement('video');video.autoplay=true;video.playsInline=true;video.muted=true;video.srcObject=stream;if(local)video.classList.add('mirror');else video.autoPictureInPicture=true;
  const avatar=document.createElement('div');avatar.className='avatar';renderAvatar(avatar,name,local?myAvatar:profiles.get(id)?.avatar);
  const label=document.createElement('div');label.className='participant-name';label.textContent=(name||'Participante')+(local?' (Você)':'');
  const status=document.createElement('div');status.className='status-icons';status.id='status-'+id;
@@ -466,6 +468,7 @@ function createVideoCard(id,name,stream,local=false){
   const pin=document.createElement('button');pin.className='pin-btn';pin.type='button';pin.title='Fixar participante';pin.setAttribute('aria-label','Fixar participante');pin.textContent='📌';pin.addEventListener('click',()=>togglePinParticipant(id));
   const fullscreen=document.createElement('button');fullscreen.type='button';fullscreen.title='Ver vídeo/compartilhamento em tela cheia';fullscreen.setAttribute('aria-label','Ver em tela cheia');fullscreen.textContent='⛶';fullscreen.addEventListener('click',()=>openVideoFullscreen(card,video));
   actions.append(pin,fullscreen);
+  if(document.pictureInPictureEnabled){const pipb=document.createElement('button');pipb.type='button';pipb.title='Janela flutuante';pipb.setAttribute('aria-label','Janela flutuante');pipb.textContent='⧉';pipb.addEventListener('click',()=>togglePip(video));actions.append(pipb)}
   if(isHost){const kick=document.createElement('button');kick.className='kick-btn';kick.type='button';kick.title='Remover da chamada';kick.setAttribute('aria-label','Remover da chamada');kick.textContent='🚪';kick.addEventListener('click',()=>{if(confirm('Remover '+nameOf(id)+' da chamada?'))kickParticipant(id)});actions.append(kick)}
   if(pinnedParticipantId===id){card.classList.add('pinned');pin.classList.add('active')}
   const pill=document.createElement('div');pill.className='volume-pill';
@@ -803,7 +806,7 @@ function handleData(id,payload){
   case 'roster':if(!isHost&&id===roomId)processRoster(payload.members||[]);return;
   case 'chat':if(typeof payload.message==='string')addMessage(String(payload.name||nameOf(id)).slice(0,40),payload.message.slice(0,1000));return;
   case 'status':{const m=members.get(id);if(m){m.mic=!!payload.mic;m.camera=!!payload.camera;updateVideoStatus(id,m.mic,m.camera)}return}
-  case 'leave':removeParticipant(id,true);if(isHost)broadcastRoster();return;
+  case 'leave':removeParticipant(id,true);if(isHost)broadcastRoster();else if(id===roomId)hostLeft();return;
   case 'profile':profiles.set(id,{avatar:sanitizeAvatar(payload.avatar)});updateAvatarFor(id);return;
   case 'react':{if(!REACTIONS.includes(payload.e))return;const now=Date.now();if(now-(lastReactFrom.get(id)||0)<200)return;lastReactFrom.set(id,now);showReaction(payload.e,nameOf(id));return}
   case 'sound':{if(muteBoard)return;const sound=SOUNDS.find(s=>s.id===payload.id);if(!sound)return;const now=Date.now();if(now-(lastSoundFrom.get(id)||0)<300)return;lastSoundFrom.set(id,now);playSoundLocal(sound);return}
@@ -829,6 +832,7 @@ function removeParticipant(id,sound=true){
  if(existed&&sound)playUiSound();updateCount();
 }
 function processRoster(list){
+ rosterOrder=list.map(x=>x.id).filter(Boolean);
  const ids=new Set(list.map(x=>x.id));
  list.forEach(item=>{if(!item.id||item.id===myId)return;const isNew=!members.has(item.id);members.set(item.id,{name:String(item.name||'Participante').slice(0,30),mic:item.mic!==false,camera:item.camera!==false});if(isNew)playUiSound();ensureDataConnection(item.id);ensureMediaConnection(item.id)});
  for(const id of [...members.keys()])if(!ids.has(id))removeParticipant(id,true);
@@ -857,7 +861,7 @@ function setupMediaConnection(call){
  call.on('error',e=>console.warn('Media connection:',e));
  const pc=call.peerConnection;if(pc){pc.addEventListener('connectionstatechange',()=>{if(pc.connectionState==='connected')applyScreenSenderState(call);if(pc.connectionState==='failed'){if(mediaConnections.get(id)===call)mediaConnections.delete(id);detachAudioRoute(id);$('card-'+id)?.remove();try{call.close()}catch(e){}setTimeout(()=>ensureMediaConnection(id),2200)}else if(pc.connectionState==='disconnected'){setTimeout(()=>{if(pc.connectionState==='disconnected'&&mediaConnections.get(id)===call){mediaConnections.delete(id);try{call.close()}catch(e){}setTimeout(()=>ensureMediaConnection(id),1800)}},5000)}})}
 }
-function initializeVideoObserver(){if(!('IntersectionObserver' in window))return;videoObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{const video=entry.target;if(!video.isConnected)return;if(entry.isIntersecting&&!hideRemoteVideos)video.play().catch(()=>{});else video.pause()})},{root:$('videoGrid').parentElement,rootMargin:'80px',threshold:.05})}
+function initializeVideoObserver(){if(!('IntersectionObserver' in window))return;videoObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{const video=entry.target;if(!video.isConnected)return;if(entry.isIntersecting&&!hideRemoteVideos)video.play().catch(()=>{});else if(document.pictureInPictureElement!==video)video.pause()})},{root:$('videoGrid').parentElement,rootMargin:'80px',threshold:.05})}
 let peerOptions=null,peerAttempts=0,everOpened=false,leaving=false,recovering=false,recoverTimer=null;
 function initializePeer(){
  peerOptions={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}],sdpSemantics:'unified-plan'}};
@@ -871,7 +875,7 @@ function createPeer(){
   myId=id;setStatus('Conectado');
   if(!$('card-'+myId))createVideoCard(myId,myName,sharingScreen&&screenStream?screenStream:localStream,true);
   if(!localAnalyser)attachAudioRoute(myId,localStream,true);
-  if(isHost){if(!oldId)toast('Sala criada! Compartilhe o convite ou o código '+roomCode+'.');updateCount()}else connectToHost();
+  if(isHost){if(!oldId)toast('Sala criada! Compartilhe o convite ou o código '+roomCode+'.');updateCount();if(promoted){promoted=false;members.forEach((_,mid)=>{ensureDataConnection(mid);ensureMediaConnection(mid)})}}else connectToHost();
   startVoiceDetection();startStatsMonitoring();renderPolls();
  });
  p.on('call',call=>{if(p!==peer)return;call.answer(getOutgoingStream());setupMediaConnection(call)});
@@ -879,18 +883,22 @@ function createPeer(){
  p.on('error',error=>{
   if(p!==peer||leaving)return;console.warn('PeerJS:',error.type,error);
   if(error.type==='unavailable-id'){
-   if(peerAttempts++>=8){toast('Não foi possível criar a sala. Recarregue a página.');return}
-   try{p.destroy()}catch(e){}
+   peerAttempts++;if(peerAttempts>8){toast('Não foi possível criar a sala. Recarregue a página.');return}
+   if(peer===p)peer=null;try{p.destroy()}catch(e){}
    if(!everOpened){setRoomCode(makeCode());$('roomCodeBtn').textContent='Sala '+roomCode;createPeer()}
-   else setTimeout(()=>{if(joined&&!leaving)createPeer()},2500);
+   else if(isHost&&peerAttempts>=(promoted?3:5))demoteToGuest();
+   else{peerWait=true;setTimeout(()=>{peerWait=false;if(joined&&!leaving&&!peer)createPeer()},2500)}
   }else if(error.type==='peer-unavailable'){
-   if(!isHost){toast('Sala '+roomCode+' não encontrada. Confira o código.');if(hostEverConnected)scheduleRecover(5000)}
+   if(!isHost){
+    if(!hostEverConnected)toast('Sala '+roomCode+' não encontrada. Confira o código.');
+    else if(String(error.message||'').includes(roomId))considerMigration();
+   }
   }else{setStatus('Reconectando...');scheduleRecover(3000)}
  });
  p.on('disconnected',()=>{if(p!==peer||leaving)return;setStatus('Reconectando...');setTimeout(()=>{if(p===peer&&!p.destroyed&&p.disconnected&&!leaving)p.reconnect()},1000)});
  p.on('close',()=>{if(p===peer&&!leaving)scheduleRecover(1500)});
 }
-function connectToHost(){setStatus('Entrando na sala...');const conn=peer.connect(roomId,{reliable:true,serialization:'json',metadata:{name:myName}});setupDataConnection(conn);conn.on('open',()=>{conn.send({type:'hello',name:myName});setStatus('Conectado à sala');if(!hostEverConnected)toast('Você entrou na chamada!');hostEverConnected=true});conn.on('error',()=>toast('Não foi possível conectar ao anfitrião.'));setTimeout(()=>{if(!conn.open&&joined)toast('Aguardando o anfitrião da sala...')},6000)}
+function connectToHost(){setStatus('Entrando na sala...');{const prev=dataConnections.get(roomId);if(prev&&!prev.open){dataConnections.delete(roomId);try{prev.close()}catch(e){}}}const conn=peer.connect(roomId,{reliable:true,serialization:'json',metadata:{name:myName}});setupDataConnection(conn);conn.on('open',()=>{conn.send({type:'hello',name:myName});setStatus('Conectado à sala');if(!hostEverConnected)toast('Você entrou na chamada!');else if(migrateStart)toast('Reconectado à sala com o novo anfitrião.',4000);hostEverConnected=true;migrateStart=0});conn.on('error',()=>toast('Não foi possível conectar ao anfitrião.'));setTimeout(()=>{if(!conn.open&&joined)toast('Aguardando o anfitrião da sala...')},6000)}
 function showLoginError(message){$('loginError').textContent=message}
 async function joinMeeting(){
  if(joined)return;myName=$('userName').value.trim();if(!myName){showLoginError('Digite seu nome para continuar.');return}
@@ -1092,7 +1100,7 @@ async function recoverLocalMedia(){
  }catch(e){console.warn('recoverLocalMedia:',e);toast('Não consegui reativar a câmera ou o microfone. Verifique as permissões.')}
 }
 async function recoverConnection(){
- if(!joined||leaving||recovering)return;recovering=true;
+ if(!joined||leaving||recovering||peerWait)return;recovering=true;
  try{
   await ensureAudioContext().catch(()=>{});await recoverLocalMedia();
   if(!peer||peer.destroyed){setStatus('Reconectando...');createPeer();return}
@@ -1120,7 +1128,7 @@ function startKeepAlive(){
    navigator.mediaSession.metadata=new MediaMetadata({title:'Chamada em andamento',artist:'DiscordIA • Sala '+roomCode});
    navigator.mediaSession.playbackState='playing';
    const set=(a,fn)=>{try{navigator.mediaSession.setActionHandler(a,fn)}catch(e){}};
-   set('play',()=>keepAliveEl?.play().catch(()=>{}));set('togglemicrophone',()=>toggleMic());set('hangup',()=>leaveMeeting());
+   set('play',()=>keepAliveEl?.play().catch(()=>{}));set('togglemicrophone',()=>toggleMic());set('togglecamera',()=>toggleCamera());set('hangup',()=>leaveMeeting());set('enterpictureinpicture',()=>{if(autoPip)enterPip()});
   }
  }catch(e){}
 }
@@ -1142,6 +1150,69 @@ function startWatchdog(){
   const c=dataConnections.get(roomId);
   if(!peer||peer.destroyed||peer.disconnected||(!isHost&&hostEverConnected&&(!c||!c.open)))scheduleRecover(0);
  },8000);
+}
+
+/* ===================== Janela flutuante (PiP) ===================== */
+let autoPip=true;
+function pickPipVideo(){
+ const vid=id=>{const v=$('card-'+id)?.querySelector('video');return v&&v.readyState>=2?v:null};
+ for(const id of sharers){const v=vid(id);if(v)return v}
+ if(pinnedParticipantId){const v=vid(pinnedParticipantId);if(v)return v}
+ let best=null,bt=0;
+ for(const [id,t] of speakingUntil){if(id!==myId&&members.get(id)?.camera!==false&&t>bt){const v=vid(id);if(v){best=v;bt=t}}}
+ if(best)return best;
+ for(const [id,m] of members){if(m.camera!==false){const v=vid(id);if(v)return v}}
+ for(const id of members.keys()){const v=vid(id);if(v)return v}
+ return null;
+}
+async function togglePip(video){
+ if(!document.pictureInPictureEnabled){toast('Seu navegador não suporta a janela flutuante.');return}
+ try{
+  if(document.pictureInPictureElement&&(!video||document.pictureInPictureElement===video)){await document.exitPictureInPicture();return}
+  video=video||pickPipVideo();
+  if(!video){toast('Nenhum vídeo disponível para flutuar agora.');return}
+  if(hideRemoteVideos){setHideVideos(false)}
+  await video.play().catch(()=>{});await video.requestPictureInPicture();
+ }catch(e){console.warn('PiP:',e);toast('Não foi possível abrir a janela flutuante.')}
+}
+async function enterPip(){
+ if(!document.pictureInPictureEnabled||document.pictureInPictureElement)return;
+ const v=pickPipVideo();if(!v)return;try{await v.requestPictureInPicture()}catch(e){}
+}
+
+/* ===================== Anfitrião substituto ===================== */
+let rosterOrder=[],migrateStart=0,promoted=false,peerWait=false;
+function nextHostCandidate(){
+ const order=rosterOrder.filter(id=>id!==roomId&&(id===myId||members.has(id)));
+ if(!order.includes(myId))order.push(myId);
+ const skip=Math.floor(Math.max(0,Date.now()-migrateStart-6000)/12000);
+ return order[Math.min(skip,order.length-1)];
+}
+function considerMigration(){
+ if(isHost||leaving||!joined||!hostEverConnected)return;
+ if(!migrateStart)migrateStart=Date.now();
+ if(Date.now()-migrateStart>=6000&&nextHostCandidate()===myId){becomeHost();return}
+ setStatus('Procurando novo anfitrião...');scheduleRecover(3000);
+}
+function hostLeft(){if(isHost||leaving||!hostEverConnected)return;migrateStart=Date.now()-6000;considerMigration()}
+function becomeHost(){
+ if(isHost||leaving||!joined)return;
+ promoted=true;isHost=true;migrateStart=0;peerAttempts=0;clearTimeout(recoverTimer);
+ const old=peer;peer=null;
+ mediaConnections.forEach(c=>{try{c.close()}catch(e){}});mediaConnections.clear();
+ dataConnections.forEach(c=>{try{c.close()}catch(e){}});dataConnections.clear();pendingCalls.clear();
+ members.delete(roomId);rosterOrder=rosterOrder.filter(x=>x!==roomId);
+ for(const id of [roomId,...members.keys()]){$('card-'+id)?.remove();detachAudioRoute(id)}
+ try{old?.destroy()}catch(e){}
+ toast('O anfitrião saiu. Você agora é o anfitrião da sala.',6000);
+ createPeer();
+ setTimeout(()=>{if(!isHost||leaving)return;let changed=false;members.forEach((_,id)=>{const c=dataConnections.get(id);if(!c||!c.open){removeParticipant(id,false);changed=true}});if(changed)broadcastRoster()},20000);
+}
+function demoteToGuest(){
+ if(!isHost)return;
+ isHost=false;promoted=false;peerAttempts=0;hostEverConnected=false;migrateStart=0;
+ toast('A sala continuou com outro anfitrião. Você entrou como participante.',6000);
+ createPeer();
 }
 
 /* ===================== Eventos ===================== */
@@ -1217,6 +1288,8 @@ async function leaveMeeting(){
 }
 $('leaveBtn').addEventListener('click',()=>{if(confirm('Deseja realmente sair da chamada?'))leaveMeeting()});
 navigator.mediaDevices?.addEventListener?.('devicechange',()=>{if(joined)refreshDevices()});
+if(document.pictureInPictureEnabled){$('pipBtn').addEventListener('click',()=>togglePip());$('autoPip').addEventListener('change',e=>{autoPip=e.target.checked})}
+else{$('pipBtn').style.display='none';$('autoPip').closest('.setting').style.display='none'}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&joined&&!leaving)resumeAfterBackground()});
 window.addEventListener('pageshow',e=>{if(e.persisted&&joined&&!leaving)resumeAfterBackground()});
 window.addEventListener('online',()=>{if(joined&&!leaving)scheduleRecover(500)});
